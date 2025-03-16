@@ -44,7 +44,7 @@ const FormulaInput = () => {
         }
     }, []);
 
-    const handleKeyDown = (event) => {
+    const handleKeyDown =  useCallback((event) => {
         if (OPERATORS.includes(event.key)) {
             const newNode = { type: 'inline', children: [{ text: ` ${event.key} ` }] };
             Transforms.insertNodes(editor, newNode);
@@ -60,10 +60,13 @@ const FormulaInput = () => {
         if (event.key === 'Backspace' && !value?.[currentPosition]?.children[0]?.text && (value?.[currentPosition-1]?.type === 'tag' || value?.[currentPosition-1]?.type === 'select')) {
             Transforms.delete(editor, { at: [currentPosition-1,0] });
         }
-    };
+    }, [currentPosition, editor, value]);
+
+    const handleChangeValue = useCallback((value = "") => {
+        setValue(value)
+    }, []);
 
     const replaceWithCustomComponent = ({name, value, type}) => {
-
         Transforms.delete(editor, { at: [currentPosition,0] });
 
         const newTag = { type: type || 'tag', value:value,  id: uuidv4(), children: [{ text: name }] };
@@ -75,29 +78,20 @@ const FormulaInput = () => {
         });
     };
 
-
-    const handleChangeValue = useCallback((value = "") => {
-        setValue(value)
-    }, []);
-
-
-    const getCursorPosition = () => {
+    const getCursorPosition = useCallback( () => {
         const { selection } = editor;
         if (selection && Range.isCollapsed(selection)) {
             const [point] = Range.edges(selection);
             return point?.path[0];
         }
         return null;
-    };
-
-    const onSelectionChange = (data) => {
-        setCurrentPosition(data.anchor?.path[0])
-    }
+    }, [editor]);
 
     useEffect(() => {
         const currPositionValue = value?.[currentPosition]?.children?.[0]?.text.trim()
 
         if (currPositionValue && isNaN(currPositionValue) && (value[currentPosition-1]?.type === 'inline' || currentPosition === 0) ) {
+            // todo make normal new var
             const mergedData = [...data, {value: 0, name:"new variable", type: "select"}]
 
             setShowDropdown(true)
@@ -108,9 +102,13 @@ const FormulaInput = () => {
         }
     }, [value, currentPosition]);
 
+    const onSelectionChange = (data) => {
+        setCurrentPosition(data.anchor?.path[0])
+    }
+
     useEffect(() => {
         setCurrentPosition(getCursorPosition())
-    }, [value]);
+    }, [value, getCursorPosition]);
 
     if (isLoading){
         return <div>Loading...</div>
