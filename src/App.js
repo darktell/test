@@ -1,7 +1,7 @@
 import './App.css';
 import {useQuery} from "react-query";
 import { QueryClient, QueryClientProvider } from 'react-query';
-import FormulaInput from "./Input";
+import FormulaInput from "./components/Input";
 
 const queryClient = new QueryClient();
 
